@@ -1,0 +1,26 @@
+extends basicSite.pug
+
+block jscript
+  script(src='/js/script2.js')
+
+  link(rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css' integrity='sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==' crossorigin='')
+  script(src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js' integrity='sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==' crossorigin='')
+    
+  style.
+    #map{height:45vh; width:40vw;}
+
+block content2
+  br
+  .box
+    .columns(class='is-centered is-mobile' id="columns")
+      .column
+        input.input(type='text' id='CityStart' placeholder='Start')
+        input#TimeStart(type='time')
+      .column
+        input.input(type='text' id='CityEnd' placeholder='Ende')
+        input#TimeEnd(type='time')
+    input.button#Go(type='button' value ='RoutenWetter' class="is-fullwidth")
+  .box
+    .box#WetterAnzeige
+    .box#Diagramm
+      canvas#WetterDiagramm

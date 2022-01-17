@@ -1,0 +1,41 @@
+extends basicSite.pug
+
+block jscript
+  script(src='/js/script2.js')
+
+  link(rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css' integrity='sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==' crossorigin='')
+  script(src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js' integrity='sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==' crossorigin='')
+    
+  style.
+    #map{height:45vh; width:40vw;}
+
+block content2
+  br
+  .box
+    article.message.is-hidden(id="LocationBox")
+      .message-header
+        p Mehr als eine Stadt mit dem gleichen Namen
+        button.delete(aria-label='delete')
+      .message-body(id='TooManyLocationsMessage')
+        | Es gibt mehrere Städte mit diesem Namen. Bitte wählen sie eine aus <br>
+        .select#Selector(onChange="weather.iHateThis2()")
+          select#CitySelector
+    input.input(type='text' id='City' placeholder='Stadt')
+      |
+    input.button(type='Submit' class="button is-primary is-centered" id="Submit" Name="Submit" value='Wie ist das Wetter heute?')
+      |
+    .box
+      .columns(class='is-centered is-mobile' id="columns")
+        .column
+          input.button(type='Submit' class="is-fullwidth" value='Aktuell' id="currentWeather")
+        .column
+          input.button(type='Submit' class="is-fullwidth" value="Heute" id="hourlyWeather")
+        .column
+          input.button(type='Submit' class="is-fullwidth" value="Diese Woche" id="dailyWeather")
+    .box(id="wetterBox")
+      .columns(class="is-mobile" id="wetterAnzeige")
+
+    script.
+      weather.init();
+  
+    
