@@ -14,7 +14,7 @@ const weather = {
     //Adding Click Function to button
     var x = document
       .getElementById("Submit")
-      .addEventListener("click", weather.iHateThis);
+      .addEventListener("click", weather.FirstFunction);
 
     var btnCurrent = document
       .getElementById("currentWeather")
@@ -29,13 +29,13 @@ const weather = {
     //object.addEventListener("select", myScript);
     var CitySelector = document
       .getElementById("Selector")
-      .addEventListener("change", weather.iHateThis2);
+      .addEventListener("change", weather.secondFunction);
   },
 
-  iHateThis: function () {
+  FirstFunction: function () {
     weather.fetchLocation(document.getElementById("City").value);
   },
-  iHateThis2: function () {
+  secondFunction: function () {
     console.log("Click");
 
     var x = document.getElementById("CitySelector").value;
