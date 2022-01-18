@@ -7,6 +7,7 @@ const weather = {
   EndZeit: "",
 
   data: "",
+  data2: "",
 
   StartCity: {
     lat: "",
@@ -58,10 +59,10 @@ function init() {
 }
 
 const getData = async () => {
-  const response = await fetch("https://jsonplaceholder.typicode.com/todos/1")
-  const data = await response.json()
-  
-  console.log(data)
+  const response = await fetch("https://jsonplaceholder.typicode.com/todos/1");
+  const data = await response.json();
+
+  console.log(data);
 
   weather.StartCity.name = document.getElementById("StartCity").value;
   fetchLocation(weather.StartCity);
@@ -72,47 +73,47 @@ const getData = async () => {
 
   setMidCities();
   fetchWeather(weather.MidCity1);
-}
+};
 
 function doTheThing() {
   weather.StartCity.name = document.getElementById("StartCity").value;
-  fetchLocation(weather.StartCity);
 
   weather.EndCity.name = document.getElementById("EndCity").value;
 
-  fetchLocation(weather.EndCity);
-
-  setMidCities();
-  fetchWeather(weather.MidCity1);
+  
+  fetchLocation(weather.StartCity, function () {
+    fetchLocation(weather.EndCity, () => {
+      setMidCities();
+    });
+  });
+  
+/*
+  fetchLocation2(weather.StartCity).then( () =>
+  {fetchLocation2(weather.EndCity).then( () =>
+  {setMidCities()})});
+*/
 }
 
 //async
-const fetchLocation2 = location =>
-  new Promise(function fetchLocation(City) {
-    let url = `http://api.openweathermap.org/geo/1.0/direct?q=${City.name}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
-  
-    fetch(url)
-      .then((resp) => {
-        if (!resp.ok) throw new Error(resp.statusText);
-        return resp.json();
-      })
-      .then((data) => {
-        console.log("fetched Locations:");
-        console.log(data);
-  
-        //document.getElementById("LocationBox").className = "message is-hidden";
-        City.lon = data[0].lon;
-        City.lat = data[0].lat;
-  
-        fetchWeather(City);
-        resolve(location);
-      })
-      .catch(console.err);
-  });
-    
+async function fetchLocation2(city) {
+  let url = `http://api.openweathermap.org/geo/1.0/direct?q=${city.name}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
 
-function fetchLocation(City) {
-  let url = `http://api.openweathermap.org/geo/1.0/direct?q=${City.name}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
+  const resp = await fetch(url);
+  
+  const data = resp.json;
+  weather.data = resp;
+  weather.data2 = data;
+  console.log("fetched Locations:");
+  console.log(data);
+  city.lon = data[0].lon;
+  city.lat = data[0].lat;
+
+  fetchWeather(city);
+  return " ";
+}
+
+function fetchLocation(city, callback) {
+  let url = `http://api.openweathermap.org/geo/1.0/direct?q=${city.name}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
 
   fetch(url)
     .then((resp) => {
@@ -124,18 +125,29 @@ function fetchLocation(City) {
       console.log(data);
 
       //document.getElementById("LocationBox").className = "message is-hidden";
-      City.lon = data[0].lon;
-      City.lat = data[0].lat;
+      city.lon = data[0].lon;
+      city.lat = data[0].lat;
 
-      fetchWeather(City);
+      fetchWeather(city);
+    })
+    .then(() => {
+      if (callback) {
+        callback();
+      }
     })
     .catch(console.err);
 }
 
 //Speichert Start und Endzeit
 function tempName() {
-  var StartTS =document.getElementById("StartDate").value +" " +document.getElementById("StartTime").value.substring(0, 3);
-  var EndTS =document.getElementById("EndDate").value +" " +document.getElementById("EndTime").value.substring(0, 3);
+  var StartTS =
+    document.getElementById("StartDate").value +
+    " " +
+    document.getElementById("StartTime").value.substring(0, 3);
+  var EndTS =
+    document.getElementById("EndDate").value +
+    " " +
+    document.getElementById("EndTime").value.substring(0, 3);
 
   var longTimeStart = new Date(StartTS).getTime();
   var longTimeEnd = new Date(EndTS).getTime();
@@ -143,6 +155,12 @@ function tempName() {
 }
 
 function setMidCities() {
+  console.log(weather.StartCity, weather.EndCity);
+
+  console.log("lat: " + weather.StartCity.lat);
+
   weather.MidCity1.lat = (weather.StartCity.lat + weather.EndCity.lat) / 2;
   weather.MidCity1.lon = (weather.StartCity.lon + weather.EndCity.lon) / 2;
+
+  fetchWeather(weather.MidCity1);
 }
