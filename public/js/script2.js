@@ -268,5 +268,4 @@ const weather = {
     }
   },
 
-  CitySelector: () => {},
 };
