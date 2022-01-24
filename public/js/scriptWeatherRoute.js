@@ -159,17 +159,27 @@ async function setMidCities() {
       stacked: false,
       scales: {
         y: {
+          title: {
+            display: true,
+            text: "°C und m/s",
+            
+          },
           type: "linear",
           display: true,
           position: "left",
         },
         //zweite Y-Achse fuer die Regenwahrscheinlichkeit
         y1: {
+          title: {
+            display: true,
+            text: "Regenwahrscheinlichkeit in %",
+            color: '#1919FF',
+          },
           type: "linear",
           display: true,
           position: "left",
           min: 0,
-          max: 1,
+          max: 100,
 
           // grid line settings
           grid: {
@@ -195,6 +205,7 @@ async function setMidCities() {
 
 var labels = [1, 2, 3, 4, 5];
 
+//setzt die korrekten Werte des Graphen
 function setDiagramValues() {
   var temp = [];
   var wspeed = [];
@@ -202,21 +213,22 @@ function setDiagramValues() {
   labels = [];
 
   var startindex = 0;
-  var endindex = 0;
+  var endindex = 39;
   var oneHour = 3600100;
 
   var EndZeit = new Date(weather.EndZeit).getTime();
   var StartZeit = new Date(weather.StartZeit).getTime();
 
   for (let index = 0; index < weather.Cities[0].data.list.length; index++) {
+    //solange die Timestamps kleiner als die Startzeit sind, wird der Startindex erhoeht
     if (StartZeit >= weather.Cities[0].data.list[index].dt * 1000) {
       startindex = index;
     }
+    //Wenn ein TimeStamp zwischen Endzeit-61Minuten und Startzeit+61Minuten liegt wird er als Ende gespeichert
     if (
       weather.Cities[0].data.list[index].dt * 1000 - oneHour <= EndZeit &&
       weather.Cities[0].data.list[index].dt * 1000 + oneHour >= EndZeit
     ) {
-      console.log(endindex);
       endindex = index;
     }
   }
@@ -236,15 +248,28 @@ function setDiagramValues() {
     );
   }
 
+  var today = new Date(
+    parseInt(weather.Cities[0].data.list[weather.Cities[0].dtIndex].dt * 1000)
+  );
   //Added die Wetterdaten in das Array des Graphen
   for (let i = 0; i < weather.Cities.length; i++) {
     temp.push(weather.Cities[i].data.list[0].main.temp);
     wspeed.push(weather.Cities[i].data.list[0].wind.speed);
-    pop.push(weather.Cities[i].data.list[0].pop);
+    pop.push(weather.Cities[i].data.list[0].pop * 100);
     var DateTime = new Date(
       parseInt(weather.Cities[i].data.list[weather.Cities[i].dtIndex].dt * 1000)
     );
-    labels.push(("" + DateTime).substring(16, 24));
+    if (DateTime.getDate() == today.getDate()) {
+      labels.push(("" + DateTime).substring(16, 21));
+    } else {
+      labels.push(
+        DateTime.getDate() +
+          "." +
+          (DateTime.getMonth() + 1) +
+          ". " +
+          ("" + DateTime).substring(16, 21)
+      );
+    }
   }
 
   weather.temp = temp;
@@ -267,9 +292,29 @@ function setMap() {
 
   var polygon = L.polygon([
     [weather.Cities[0].lat, weather.Cities[0].lon],
-    [weather.Cities[1].lat, weather.Cities[1].lon],
-    [weather.Cities[2].lat, weather.Cities[2].lon],
-    [weather.Cities[3].lat, weather.Cities[3].lon],
+    //[weather.Cities[1].lat, weather.Cities[1].lon],
+    // [weather.Cities[2].lat, weather.Cities[2].lon],
+    //[weather.Cities[3].lat, weather.Cities[3].lon],
     [weather.Cities[4].lat, weather.Cities[4].lon],
   ]).addTo(map);
+}
+function init() {
+  //Standartwerte in das Document einsetzen
+  var today = new Date();
+  var todayString =
+    today.getFullYear() + "-" + today.getMonth() + 1 + "-" + today.getDate();
+  document.getElementById("StartDate").value = todayString;
+  document.getElementById("EndDate").value = todayString;
+
+  document.getElementById("StartDate").min = todayString;
+  document.getElementById("EndDate").min = todayString;
+  today.setDate(today.getDate() + 5);
+  todayString =
+    today.getFullYear() + "-" + today.getMonth() + 1 + "-" + today.getDate();
+  document.getElementById("StartDate").max = todayString;
+  document.getElementById("EndDate").max = todayString;
+
+  document.getElementById("StartTime").value = today.getHours() + ":00";
+  today.setHours(today.getHours() + 5);
+  document.getElementById("EndTime").value = today.getHours() + ":00";
 }
