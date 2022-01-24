@@ -8,7 +8,7 @@ block jscript
   script(src='https://cdn.jsdelivr.net/npm/chart.js')
   
   style.
-    #map{height:45vh; width:40vw;}
+    #map{height:45vh; width:100%;}
 
 block content2
   br
@@ -24,6 +24,7 @@ block content2
         input.input#EndTime(type='time')
     input.button#Go(type='button' value ='RoutenWetter' class="is-fullwidth" onClick="doTheThing()")
   .box
-    .box#WetterAnzeige
     .box#Diagramm
       canvas#WetterDiagramm
+    .box#WetterAnzeige
+    
