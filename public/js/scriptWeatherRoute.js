@@ -71,6 +71,7 @@ async function fetchLocation2(city) {
   await fetchWeather(city);
 }
 
+
 //Speichert Start und Endzeit
 function getTimes() {
   weather.StartZeit =
@@ -177,7 +178,7 @@ async function setMidCities() {
           },
           type: "linear",
           display: true,
-          position: "left",
+          position: "right",
           min: 0,
           max: 100,
 
@@ -314,7 +315,13 @@ function init() {
   document.getElementById("StartDate").max = todayString;
   document.getElementById("EndDate").max = todayString;
 
+  console.log(today.getHours())
+  console.log(today.getHours()+ ":00")
+  if(today.getHours()<10){
+    document.getElementById("StartTime").value = "0"+today.getHours() + ":00";
+  }else {
   document.getElementById("StartTime").value = today.getHours() + ":00";
+  }
   today.setHours(today.getHours() + 5);
   document.getElementById("EndTime").value = today.getHours() + ":00";
 }
