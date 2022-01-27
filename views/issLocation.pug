@@ -15,9 +15,19 @@ block content2
     input.button(type='button' value ='Update!' onClick="updateMap()")
     p#lat= lat 
     p#lon= lon
+    p#hiddenArray(hidden)= hiddenText
   .box#MapBox
   script(type='text/javascript').
     var marker 
+    var map
+    var polyline
+    var ar = [];
+    const tablename ="test2"
+
+    function getAr(){
+
+    }
+
     async function updateMap(){
       const url = "http://api.open-notify.org/iss-now.json"
       const resp = await fetch(url);
@@ -28,21 +38,53 @@ block content2
       var lat =data.iss_position.latitude
       var lon =data.iss_position.longitude
       marker.setLatLng([lat,lon]);
+
+      ar.push([lat,lon]);
+      //polyline.setLatLngs(ar)
+      var x = L.polyline([ar[ar.length-2],ar[ar.length-1]]).addTo(map);
     }
+
+
     function setMap() {
       const lat = document.getElementById("lat").textContent
       const lon = document.getElementById("lon").textContent
     document.getElementById("MapBox").innerHTML = '<div id="map"></div>';
-    var map = L.map("map").setView([0, 0], 0);
+    map = L.map("map").setView([0, 0], 0);
 
     L.tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
       attribution:
       '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     marker = L.marker([lat, lon]).addTo(map);
+    polyline = L.polyline(ar).addTo(map);
+    console.log(document.getElementById("MapBox"))
     }
     setMap();
+
     setInterval(function() {
-        console.log("Updated Map")
-        updateMap();
+      console.log("Updated Map")
+      updateMap();
     }, 30000);
+
+    function testy(){
+      var hiddenText = document.getElementById("hiddenArray").innerHTML
+      ar = [];
+      var lines = hiddenText.split('\n');
+      for(var i = 0;i < lines.length;i++){
+        var latindex = lines[i].indexOf("lat")
+        var lonindex = lines[i].indexOf("lon")
+        var xindex = lines[i].indexOf("}")
+
+        var lat = lines[i].substring(latindex+5, lonindex-2)
+        var lon = lines[i].substring(lonindex+5, xindex)
+        ar.push([lat, lon])
+        //code here using lines[i] which will give you each line
+     }
+    }
+    testy()
+
+
+
+
+
+
