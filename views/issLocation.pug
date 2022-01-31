@@ -29,14 +29,14 @@ block content2
     }
 
     async function updateMap(){
-      const url = "http://api.open-notify.org/iss-now.json"
+      const url = "http://localhost:3000/ISS-now"
       const resp = await fetch(url);
 
       if (!resp.ok) throw new Error(resp.statusText);
       const data = await resp.json();
 
-      var lat =data.iss_position.latitude
-      var lon =data.iss_position.longitude
+      var lat =data.lat
+      var lon =data.lon
       marker.setLatLng([lat,lon]);
 
       ar.push([lat,lon]);
@@ -49,15 +49,16 @@ block content2
       const lat = document.getElementById("lat").textContent
       const lon = document.getElementById("lon").textContent
     document.getElementById("MapBox").innerHTML = '<div id="map"></div>';
-    map = L.map("map").setView([0, 0], 0);
+    map = L.map("map").setView([0, 0], 1);
 
     L.tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
       attribution:
       '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      worldCopyJump: true,
     }).addTo(map);
     marker = L.marker([lat, lon]).addTo(map);
     polyline = L.polyline(ar).addTo(map);
-    console.log(document.getElementById("MapBox"))
+    //console.log(document.getElementById("MapBox"))
     }
     setMap();
 
@@ -70,7 +71,7 @@ block content2
       var hiddenText = document.getElementById("hiddenArray").innerHTML
       ar = [];
       var lines = hiddenText.split('\n');
-      for(var i = 0;i < lines.length;i++){
+      for(var i = 0;i < lines.length-1;i++){
         var latindex = lines[i].indexOf("lat")
         var lonindex = lines[i].indexOf("lon")
         var xindex = lines[i].indexOf("}")
@@ -80,8 +81,28 @@ block content2
         ar.push([lat, lon])
         //code here using lines[i] which will give you each line
      }
+
+     //
+     for (let i = 1; i < ar.length; i++) {
+       //console.log(ar[i-1][1]+" < "+ar[i][1]+"?")
+       //console.log(ar[i-1][1]   <   ar[i][1])
+
+       //Differenz zwischen letztem und vorletztem punkt
+       const diff = (ar[i-1][1] - ar[i][1]);
+       if(diff<0 && diff>-10){
+         var x = L.polyline([ar[i-1],ar[i]]).addTo(map);
+         
+       } else {
+         
+         
+       }
+       //console.log(ar[i-1][1])
+       
+     }
     }
     testy()
+
+  
 
 
 

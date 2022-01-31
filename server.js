@@ -1,13 +1,7 @@
 import fetch from "node-fetch";
 import express, { response } from "express";
 import sqlite3 from "sqlite3";
-/*
-import fetch from 'node-fetch';
 
-var unirest = require('unirest');
-const express = require('express');
-const sqlite3  = require('sqlite3').verbose();
-*/
 const app = express();
 
 const port = 3000;
@@ -33,30 +27,29 @@ app.get("/Site1", async function (req, res) {
 
   const tablename = "test2";
 
-  const db = await new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
     }
     //console.log("Connected to the in-memory SQlite database.");
   });
 
-  const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp text, lat float, lon float);`;
+  const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp timestamp, lat float, lon float);`;
 
-  await db.run(createTable);
+  db.run(createTable);
 
   let sql = `SELECT * FROM ${tablename}`;
 
   var hiddenArrayText = "";
-  const n = await db.all(sql, [], (err, rows) => {
+  const n = db.all(sql, [], (err, rows) => {
     if (err) {
       throw err;
     }
-    console.log("this is length:" + rows.length);
     rows.forEach((row) => {
-      hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row)+ "\n");
+      hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row) + "\n");
     });
   });
-  await db.close((err) => {
+  db.close((err) => {
     if (err) {
       return console.error(err.message);
     }
@@ -66,10 +59,10 @@ app.get("/Site1", async function (req, res) {
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   await delay(1000);
 
-  console.log("This is the text" + hiddenArrayText);
+  //console.log("This is the text" + hiddenArrayText);
   res.render("issLocation", {
-    title: "Site1",
-    message: "This is the first Site",
+    title: "ISS Stalker",
+    message: "ISS Stalker",
     lat: lat,
     lon: lon,
     hiddenText: hiddenArrayText,
@@ -92,11 +85,54 @@ app.listen(port, function () {
   console.log(`Example app listening on port ${port}!`);
 });
 
-setInterval(function () {
-  console.log("Updated Map");
-  getLocation();
-}, 60000);
+//Fetch Site for last location in Database
+//SELECT * FROM table ORDER BY column DESC LIMIT 1;
+app.get("/ISS-now",function(req, res){
 
+  const tablename = "test2";
+
+  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+  });
+  var lat = 0;
+  var lon = 0;
+
+  let sql = `SELECT * FROM ${tablename} ORDER BY timestamp DESC LIMIT 1`;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      throw err;
+    }
+     rows.forEach((row) => {
+      lat = row.lat;
+      lon = row.lon;
+    })
+    
+    var issNow ={
+      "lat":lat, "lon":lon   
+    }
+  res.json(issNow);
+  });
+
+  db.close((err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log("Close the database connection.");
+  });
+  
+
+})
+setInterval(async function () {
+  await getLocation();
+}, 60000);
+setInterval(async function () {
+  await deleteOld();
+}, 360000);
+
+
+//saving ISS location to Database
 async function getLocation() {
   const url = "http://api.open-notify.org/iss-now.json";
   const resp = await fetch(url);
@@ -106,20 +142,51 @@ async function getLocation() {
 
   var lat = data.iss_position.latitude;
   var lon = data.iss_position.longitude;
+  var date = new Date(data.timestamp * 1000);
+  var timestamp = date.getFullYear() + "-";
+  {
+    if (date.getMonth() + 1 < 10) {
+      timestamp += "0";
+    }
+    timestamp += date.getMonth() + 1 + "-";
 
+    if (date.getDate() + 1 < 10) {
+      timestamp += "0";
+    }
+    timestamp += date.getDate() + " ";
+
+    if (date.getHours() < 10) {
+      timestamp += "0";
+    }
+    timestamp += date.getHours() + ":";
+
+    if (date.getMinutes() < 10) {
+      timestamp += "0";
+    }
+    timestamp += date.getMinutes() + ":";
+
+    if (date.getSeconds() < 10) {
+      timestamp += "0";
+    }
+    timestamp += date.getSeconds();
+
+    console.log(timestamp);
+  }
+
+  
+  console.log("saving new value: {Timestamp: "+ timestamp+", lat: "+ lat,", lon: "+lon)
   const tablename = "test2";
 
-  const db = await new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
     }
-    //console.log("Connected to the in-memory SQlite database.");
   });
 
   console.log("trying to insert data");
-  await db.run(
+  db.run(
     `INSERT INTO ${tablename}(timestamp, lat, lon) VALUES(?,?,?)`,
-    ["test", lat, lon],
+    [timestamp, lat, lon],
     function (err) {
       if (err) {
         return console.log(err.message);
@@ -129,10 +196,56 @@ async function getLocation() {
     }
   );
 
+  /*
+  let sql = `SELECT * FROM ${tablename}`;
+
+  var hiddenArrayText = "";
+  const n2 = db.all(sql, [], (err, rows) => {
+    if (err) {
+      throw err;
+    }
+    rows.forEach((row) => {
+      console.log(row);
+    });
+  });
+  */
+
   db.close((err) => {
     if (err) {
       return console.error(err.message);
     }
     console.log("Close the database connection.");
+  });
+}
+
+//Deleting location data older than 24
+async function deleteOld() {
+  const tablename = "test2";
+
+  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    //console.log("Connected to the in-memory SQlite database.");
+  });
+
+  console.log("Deleting old Data");
+  var query = `DELETE FROM ${tablename} WHERE timestamp=date('now','-1 day'); `;
+  //const sqlite3 = require("sqlite3").verbose();
+
+  let id = 1;
+  // delete a row based on id
+  db.run(query, id, function (err) {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log(`Row(s) deleted ${this.changes}`);
+  });
+
+  // close the database connection
+  db.close((err) => {
+    if (err) {
+      return console.error(err.message);
+    }
   });
 }
