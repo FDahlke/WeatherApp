@@ -16,14 +16,14 @@ app.get("/", function (req, res) {
 });
 
 app.get("/Site1", async function (req, res) {
-  const url = "http://api.open-notify.org/iss-now.json";
+  const url = "http://localhost:3000/ISS-now";
   const resp = await fetch(url);
 
   if (!resp.ok) throw new Error(resp.statusText);
   const data = await resp.json();
 
-  var lat = data.iss_position.latitude;
-  var lon = data.iss_position.longitude;
+  var lat = data.lat;
+  var lon = data.lon;
 
   const tablename = "test2";
 
@@ -53,7 +53,6 @@ app.get("/Site1", async function (req, res) {
     if (err) {
       return console.error(err.message);
     }
-    console.log("Close the database connection.");
   });
   //fetch location of the ISS
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -119,7 +118,6 @@ app.get("/ISS-now",function(req, res){
     if (err) {
       return console.error(err.message);
     }
-    console.log("Close the database connection.");
   });
   
 
@@ -183,7 +181,6 @@ async function getLocation() {
     }
   });
 
-  console.log("trying to insert data");
   db.run(
     `INSERT INTO ${tablename}(timestamp, lat, lon) VALUES(?,?,?)`,
     [timestamp, lat, lon],
@@ -195,20 +192,6 @@ async function getLocation() {
       console.log(`A row has been inserted with rowid ${this.lastID}`);
     }
   );
-
-  /*
-  let sql = `SELECT * FROM ${tablename}`;
-
-  var hiddenArrayText = "";
-  const n2 = db.all(sql, [], (err, rows) => {
-    if (err) {
-      throw err;
-    }
-    rows.forEach((row) => {
-      console.log(row);
-    });
-  });
-  */
 
   db.close((err) => {
     if (err) {
@@ -231,7 +214,6 @@ async function deleteOld() {
 
   console.log("Deleting old Data");
   var query = `DELETE FROM ${tablename} WHERE timestamp=date('now','-1 day'); `;
-  //const sqlite3 = require("sqlite3").verbose();
 
   let id = 1;
   // delete a row based on id
@@ -242,7 +224,6 @@ async function deleteOld() {
     console.log(`Row(s) deleted ${this.changes}`);
   });
 
-  // close the database connection
   db.close((err) => {
     if (err) {
       return console.error(err.message);
