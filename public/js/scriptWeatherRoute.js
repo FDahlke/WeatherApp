@@ -71,7 +71,6 @@ async function fetchLocation2(city) {
   await fetchWeather(city);
 }
 
-
 //Speichert Start und Endzeit
 function getTimes() {
   weather.StartZeit =
@@ -163,7 +162,6 @@ async function setMidCities() {
           title: {
             display: true,
             text: "°C und m/s",
-            
           },
           type: "linear",
           display: true,
@@ -174,7 +172,7 @@ async function setMidCities() {
           title: {
             display: true,
             text: "Regenwahrscheinlichkeit in %",
-            color: '#1919FF',
+            color: "#1919FF",
           },
           type: "linear",
           display: true,
@@ -315,12 +313,12 @@ function init() {
   document.getElementById("StartDate").max = todayString;
   document.getElementById("EndDate").max = todayString;
 
-  console.log(today.getHours())
-  console.log(today.getHours()+ ":00")
-  if(today.getHours()<10){
-    document.getElementById("StartTime").value = "0"+today.getHours() + ":00";
-  }else {
-  document.getElementById("StartTime").value = today.getHours() + ":00";
+  console.log(today.getHours());
+  console.log(today.getHours() + ":00");
+  if (today.getHours() < 10) {
+    document.getElementById("StartTime").value = "0" + today.getHours() + ":00";
+  } else {
+    document.getElementById("StartTime").value = today.getHours() + ":00";
   }
   today.setHours(today.getHours() + 5);
   document.getElementById("EndTime").value = today.getHours() + ":00";

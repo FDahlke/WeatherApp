@@ -5,7 +5,7 @@ block jscript
 
   link(rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css' integrity='sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==' crossorigin='')
   script(src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js' integrity='sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==' crossorigin='')
-    
+
   style.
     #map{height:45vh; width:40vw;}
 
@@ -20,8 +20,9 @@ block content2
         | Es gibt mehrere Städte mit diesem Namen. Bitte wählen sie eine aus <br>
         .select#Selector(onChange="weather.secondFunction()")
           select#CitySelector
-    input.input(type='text' id='City' placeholder='Stadt')
-      |
+    input#City(list='Citylist' type='text' placeholder='Stadt' oninput='getCities()')
+    datalist#Citylist
+      
     input.button(type='Submit' class="button is-primary is-centered" id="Submit" Name="Submit" value='Wie ist das Wetter heute?')
       |
     .box
@@ -37,5 +38,4 @@ block content2
 
     script.
       weather.init();
-  
-    
+

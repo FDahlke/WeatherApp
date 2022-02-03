@@ -90,7 +90,6 @@ const weather = {
             weather.city += "," + data[0].state;
           } catch (error) {}
           weather.city += "," + data[0].country;
-          
         }
         console.log(weather.city);
         document.getElementById("City").value = weather.city;
@@ -267,5 +266,25 @@ const weather = {
         "Wind: " + resp.daily[i].wind_speed + "m/s <br>";
     }
   },
-
 };
+
+async function getCities() {
+  var partialName = document.getElementById("City").value;
+  if (partialName.length > 3) {
+    let url = `http://localhost:3000/getCities?name=${partialName}`;
+
+    const resp = await fetch(url);
+
+    if (!resp.ok) throw new Error(resp.statusText);
+    const data = await resp.json();
+
+    document.getElementById("Citylist").innerHTML ="";
+//console.log()
+    for (let i = 0; i < data.Cities.length; i++) {
+      console.log(data)
+      document.getElementById("Citylist").innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country}">`;
+    }
+  } else {
+    document.getElementById("Citylist").innerHTML ="";
+  }
+}

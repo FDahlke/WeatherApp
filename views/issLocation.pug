@@ -79,30 +79,21 @@ block content2
         var lat = lines[i].substring(latindex+5, lonindex-2)
         var lon = lines[i].substring(lonindex+5, xindex)
         ar.push([lat, lon])
-        //code here using lines[i] which will give you each line
-     }
+      }
 
-     //
-     for (let i = 1; i < ar.length; i++) {
-       //console.log(ar[i-1][1]+" < "+ar[i][1]+"?")
-       //console.log(ar[i-1][1]   <   ar[i][1])
+      //
+      for (let i = 1; i < ar.length; i++) {
 
-       //Differenz zwischen letztem und vorletztem punkt
-       const diff = (ar[i-1][1] - ar[i][1]);
-       if(diff<0 && diff>-10){
-         var x = L.polyline([ar[i-1],ar[i]]).addTo(map);
-         
-       } else {
-         
-         
-       }
-       //console.log(ar[i-1][1])
-       
-     }
+        //Differenz zwischen letztem und vorletztem punkt
+        const diff = (ar[i-1][1] - ar[i][1]);
+        if(diff<0 && diff>-10){
+          var x = L.polyline([ar[i-1],ar[i]]).addTo(map);
+        }
+      }
     }
     testy()
 
-  
+
 
 
 

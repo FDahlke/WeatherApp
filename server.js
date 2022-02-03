@@ -1,10 +1,14 @@
 import fetch from "node-fetch";
 import express, { response } from "express";
 import sqlite3 from "sqlite3";
+import fs from "fs";
+import sqlite3A from "sqlite3-async";
 
 const app = express();
 
 const port = 3000;
+
+const tablename = "test2";
 
 app.set("view engine", "pug");
 
@@ -24,8 +28,6 @@ app.get("/Site1", async function (req, res) {
 
   var lat = data.lat;
   var lon = data.lon;
-
-  const tablename = "test2";
 
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
@@ -85,11 +87,7 @@ app.listen(port, function () {
 });
 
 //Fetch Site for last location in Database
-//SELECT * FROM table ORDER BY column DESC LIMIT 1;
-app.get("/ISS-now",function(req, res){
-
-  const tablename = "test2";
-
+app.get("/ISS-now", function (req, res) {
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
@@ -103,15 +101,16 @@ app.get("/ISS-now",function(req, res){
     if (err) {
       throw err;
     }
-     rows.forEach((row) => {
+    rows.forEach((row) => {
       lat = row.lat;
       lon = row.lon;
-    })
-    
-    var issNow ={
-      "lat":lat, "lon":lon   
-    }
-  res.json(issNow);
+    });
+
+    var issNow = {
+      lat: lat,
+      lon: lon,
+    };
+    res.json(issNow);
   });
 
   db.close((err) => {
@@ -119,16 +118,13 @@ app.get("/ISS-now",function(req, res){
       return console.error(err.message);
     }
   });
-  
-
-})
+});
 setInterval(async function () {
-  await getLocation();
+  //await getLocation();
 }, 60000);
 setInterval(async function () {
-  await deleteOld();
+  //await deleteOld();
 }, 360000);
-
 
 //saving ISS location to Database
 async function getLocation() {
@@ -171,9 +167,10 @@ async function getLocation() {
     console.log(timestamp);
   }
 
-  
-  console.log("saving new value: {Timestamp: "+ timestamp+", lat: "+ lat,", lon: "+lon)
-  const tablename = "test2";
+  console.log(
+    "saving new value: {Timestamp: " + timestamp + ", lat: " + lat,
+    ", lon: " + lon
+  );
 
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
@@ -203,8 +200,6 @@ async function getLocation() {
 
 //Deleting location data older than 24
 async function deleteOld() {
-  const tablename = "test2";
-
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
@@ -215,9 +210,8 @@ async function deleteOld() {
   console.log("Deleting old Data");
   var query = `DELETE FROM ${tablename} WHERE timestamp=date('now','-1 day'); `;
 
-  let id = 1;
   // delete a row based on id
-  db.run(query, id, function (err) {
+  db.run(query, function (err) {
     if (err) {
       return console.error(err.message);
     }
@@ -230,3 +224,99 @@ async function deleteOld() {
     }
   });
 }
+
+app.get("/getCities", function (req, res) {
+  const name = req.query.name;
+  console.log("Geting Cities for:"+ name)
+  var sql = `SELECT * FROM Cities WHERE Name LIKE '${name}%' limit 10;`;
+
+  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+  });
+
+  var json ='{"Cities":['
+  const n =db.all(sql, [],  (err, rows) => {
+    if (err) {
+      throw err;
+    }
+    rows.forEach((row) => {
+      json+=JSON.stringify(row)+","
+    });
+    if(json[json.length-1]==","){
+      json=json.substring(0,json.length-1)
+    }
+    json+="]}"
+    res.json(JSON.parse(json));
+  });
+  db.close((err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+  });
+
+
+  
+});
+/*
+app.get("/Cities", async function (req, res) {
+  //const fs = require("fs");
+
+  var x = "";
+  const filepath =
+    "C:\\Users\\DahlkeBe\\Downloads\\city.list.json\\city.list.json";
+
+  var name = "";
+  var lat = "";
+  var lon = "";
+  var state = "";
+  var country = "";
+  var id = "";
+
+  console.log(filepath);
+  fs.readFile(filepath, async (err, data) => {
+    if (err) throw err;
+    x = JSON.parse(data);
+
+    //const createTable = `CREATE TABLE IF NOT EXISTS cities(id int,name text, lat float, lon float, state text, country text);`;
+
+    //db.run(createTable);
+    const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+      if (err) {
+        return console.error(err.message);
+      }
+    });
+    await x.forEach(async (obj) => {
+      //Object.entries(obj).forEach(([key, value]) => {
+      name = obj.name;
+      lat = obj.coord.lat;
+      lon = obj.coord.lon;
+      state = obj.state;
+      country = obj.country;
+      id = obj.id;
+
+      var ar = [id, name, lat, lon, state, country];
+
+      //console.log("inserting " + ar)
+      db.run(
+        `INSERT INTO cities(id, name, lat, lon, state, country) VALUES(?,?,?,?,?,?)`,
+        ar,()=>{
+      console.log("inserted " + ar);
+        }
+      );
+    });
+
+    db.close((err) => {
+      if (err) {
+        return console.error(err.message);
+      }
+      console.log("Close the database connection.");
+    });
+
+    console.log(x[0]);
+    res.json(x[0]);
+  });
+  
+});
+*/
