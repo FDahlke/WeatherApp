@@ -1,3 +1,9 @@
+*.db
+*.db.old
+node_modules/*
+
+
+
 # Logs
 logs
 *.log
