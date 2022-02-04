@@ -20,7 +20,7 @@ block content2
         | Es gibt mehrere Städte mit diesem Namen. Bitte wählen sie eine aus <br>
         .select#Selector(onChange="weather.secondFunction()")
           select#CitySelector
-    input#City(list='Citylist' type='text' placeholder='Stadt' oninput='getCities()')
+    input#City(class="input" list='Citylist' type='text' placeholder='Stadt' oninput='getCities()')
     datalist#Citylist
       
     input.button(type='Submit' class="button is-primary is-centered" id="Submit" Name="Submit" value='Wie ist das Wetter heute?')

@@ -10,6 +10,8 @@ const weather = {
   lon: "",
   lat: "",
 
+  citylist: "",
+
   init: () => {
     //Adding Click Function to button
     var x = document
@@ -33,7 +35,8 @@ const weather = {
   },
 
   FirstFunction: function () {
-    weather.fetchLocation(document.getElementById("City").value);
+    //weather.fetchLocation(document.getElementById("City").value);
+    weather.fetchWeather();
   },
   secondFunction: function () {
     console.log("Click");
@@ -161,7 +164,7 @@ const weather = {
 
     document.getElementById("columnMap").innerHTML += '<div id="map"></div>';
 
-    var map = L.map("map").setView([resp.lat, resp.lon], 10);
+    var map = L.map("map").setView([weather.lat, weather.lon], 10);
 
     L.tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
       attribution:
@@ -270,6 +273,9 @@ const weather = {
 
 async function getCities() {
   var partialName = document.getElementById("City").value;
+  console.log("Starting for"+ partialName)
+
+
   if (partialName.length > 3) {
     let url = `http://localhost:3000/getCities?name=${partialName}`;
 
@@ -278,13 +284,27 @@ async function getCities() {
     if (!resp.ok) throw new Error(resp.statusText);
     const data = await resp.json();
 
-    document.getElementById("Citylist").innerHTML ="";
-//console.log()
+    document.getElementById("Citylist").innerHTML = "";
+    //console.log()
+
+    weather.citylist = data;
     for (let i = 0; i < data.Cities.length; i++) {
-      console.log(data)
-      document.getElementById("Citylist").innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country}">`;
+      //console.log(data);
+      document.getElementById(
+        "Citylist"
+      ).innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country}">`;
     }
+
+    const url2 = `http://localhost:3000/getSingleCity?name=${partialName}`;
+    const singleCity = await fetch(url2);
+    const singleData = await singleCity.json();
+    console.log(singleData);
+    weather.lat = singleData.lat;
+    weather.lon = singleData.lon;
+
   } else {
-    document.getElementById("Citylist").innerHTML ="";
+    document.getElementById("Citylist").innerHTML = "";
   }
+
+  console.log("Ending for"+ partialName)
 }

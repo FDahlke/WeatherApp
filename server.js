@@ -227,8 +227,57 @@ async function deleteOld() {
 
 app.get("/getCities", function (req, res) {
   const name = req.query.name;
-  console.log("Geting Cities for:"+ name)
-  var sql = `SELECT * FROM Cities WHERE Name LIKE '${name}%' limit 10;`;
+  console.log("Geting Cities for:" + name);
+  var cityname = name;
+  var country = "";
+
+  if (name.includes(",")) {
+    cityname = name.substring(0, name.indexOf(","));
+    country = name.substring(name.indexOf(",") + 1, name.length);
+  }
+
+  var sql = `SELECT * FROM Cities WHERE name LIKE '${cityname}%' AND country LIKE '${country}%' limit 10;`;
+  console.log(sql);
+  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+  });
+
+  var json = '{"Cities":[';
+  const n = db.all(sql, [], (err, rows) => {
+    if (err) {
+      res.json()
+      throw err;
+    }
+    rows.forEach((row) => {
+      json += JSON.stringify(row) + ",";
+    });
+    if (json[json.length - 1] == ",") {
+      json = json.substring(0, json.length - 1);
+    }
+    json += "]}";
+    res.json(JSON.parse(json));
+  });
+  db.close((err) => {
+    console.log("Closing db - GetCities")
+    if (err) {
+      return console.error(err.message);
+    }
+  });
+});
+
+app.get("/getSingleCity", function (req, res) {
+  const name = req.query.name;
+  var cityname = name;
+  var country = "";
+
+  if (name.includes(",")) {
+    cityname = name.substring(0, name.indexOf(","));
+    country = name.substring(name.indexOf(",") + 1, name.length);
+  }
+
+  var sql = `SELECT * FROM Cities WHERE name LIKE '${cityname}' AND country LIKE '${country}%' limit 1;`;
 
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
@@ -236,29 +285,25 @@ app.get("/getCities", function (req, res) {
     }
   });
 
-  var json ='{"Cities":['
-  const n =db.all(sql, [],  (err, rows) => {
+  var json = '{"Cities":[';
+  const n = db.all(sql, [], (err, rows) => {
     if (err) {
       throw err;
     }
     rows.forEach((row) => {
-      json+=JSON.stringify(row)+","
+      res.json(row)
     });
-    if(json[json.length-1]==","){
-      json=json.substring(0,json.length-1)
-    }
-    json+="]}"
-    res.json(JSON.parse(json));
   });
   db.close((err) => {
+    
+    console.log("Closing db - GetSingleCity")
     if (err) {
       return console.error(err.message);
     }
   });
-
-
-  
 });
+
+
 /*
 app.get("/Cities", async function (req, res) {
   //const fs = require("fs");
