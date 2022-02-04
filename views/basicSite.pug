@@ -1,6 +1,14 @@
 extends defaultSite
 
 block content
-  a(class='button' href='/') Back to Main Site 
+  nav.navbar(role='navigation' aria-label='main navigation')
+    .navbar-brand
+      a.navbar-item(href='/site1')
+        |ISS Stalker
+      a.navbar-item(href='/site2')
+        |RoutenWetter
+      a.navbar-item(href='/weather')
+        |Wetter-App
   br
+  h1.title= message
   block content2
