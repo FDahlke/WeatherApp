@@ -164,7 +164,7 @@ async function getLocation() {
     }
     timestamp += date.getSeconds();
 
-    console.log(timestamp);
+    //console.log(timestamp);
   }
 
   console.log(
@@ -227,7 +227,7 @@ async function deleteOld() {
 
 app.get("/getCities", function (req, res) {
   const name = req.query.name;
-  console.log("Geting Cities for:" + name);
+  console.log("Getting possible Cities for:" + name);
   var cityname = name;
   var country = "";
 
@@ -237,17 +237,21 @@ app.get("/getCities", function (req, res) {
   }
 
   var sql = `SELECT * FROM Cities WHERE name LIKE '${cityname}%' AND country LIKE '${country}%' limit 10;`;
-  console.log(sql);
+
+  console.time("possible Cities: Opening Database");
+
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
     }
   });
+  console.timeEnd("possible Cities: Opening Database");
 
   var json = '{"Cities":[';
+  console.time("possible Cities: Fetching rows");
   const n = db.all(sql, [], (err, rows) => {
     if (err) {
-      res.json()
+      res.json();
       throw err;
     }
     rows.forEach((row) => {
@@ -259,8 +263,9 @@ app.get("/getCities", function (req, res) {
     json += "]}";
     res.json(JSON.parse(json));
   });
+
+  console.timeEnd("possible Cities: Fetching rows");
   db.close((err) => {
-    console.log("Closing db - GetCities")
     if (err) {
       return console.error(err.message);
     }
@@ -271,19 +276,22 @@ app.get("/getSingleCity", function (req, res) {
   const name = req.query.name;
   var cityname = name;
   var country = "";
-
+  console.log("Getting single City " + name);
   if (name.includes(",")) {
     cityname = name.substring(0, name.indexOf(","));
     country = name.substring(name.indexOf(",") + 1, name.length);
   }
 
-  var sql = `SELECT * FROM Cities WHERE name LIKE '${cityname}' AND country LIKE '${country}%' limit 1;`;
+  var sql = `SELECT * FROM Cities WHERE name = '${cityname}' AND country LIKE '${country}%' limit 1;`;
 
+  console.time("single City: fetching");
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
     }
   });
+
+  var alreadySet = false;
 
   var json = '{"Cities":[';
   const n = db.all(sql, [], (err, rows) => {
@@ -291,18 +299,21 @@ app.get("/getSingleCity", function (req, res) {
       throw err;
     }
     rows.forEach((row) => {
-      res.json(row)
+      res.json(row);
+      alreadySet = true;
     });
+    console.timeEnd("single City: fetching");
+    if(!alreadySet){
+      res.json("none");
+    }
+    
   });
   db.close((err) => {
-    
-    console.log("Closing db - GetSingleCity")
     if (err) {
       return console.error(err.message);
     }
   });
 });
-
 
 /*
 app.get("/Cities", async function (req, res) {

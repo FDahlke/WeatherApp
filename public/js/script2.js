@@ -34,8 +34,16 @@ const weather = {
       .addEventListener("change", weather.secondFunction);
   },
 
-  FirstFunction: function () {
+  FirstFunction: async function () {
     //weather.fetchLocation(document.getElementById("City").value);
+    var partialName = document.getElementById("City").value;
+
+    const url2 = `http://localhost:3000/getSingleCity?name=${partialName}`;
+    const singleCity = await fetch(url2);
+    const singleData = await singleCity.json();
+    console.log(singleData);
+    weather.lat = singleData.lat;
+    weather.lon = singleData.lon;
     weather.fetchWeather();
   },
   secondFunction: function () {
@@ -273,8 +281,6 @@ const weather = {
 
 async function getCities() {
   var partialName = document.getElementById("City").value;
-  console.log("Starting for"+ partialName)
-
 
   if (partialName.length > 3) {
     let url = `http://localhost:3000/getCities?name=${partialName}`;
@@ -294,17 +300,7 @@ async function getCities() {
         "Citylist"
       ).innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country}">`;
     }
-
-    const url2 = `http://localhost:3000/getSingleCity?name=${partialName}`;
-    const singleCity = await fetch(url2);
-    const singleData = await singleCity.json();
-    console.log(singleData);
-    weather.lat = singleData.lat;
-    weather.lon = singleData.lon;
-
   } else {
     document.getElementById("Citylist").innerHTML = "";
   }
-
-  console.log("Ending for"+ partialName)
 }
