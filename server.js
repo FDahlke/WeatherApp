@@ -1,14 +1,13 @@
 import fetch from "node-fetch";
 import express, { response } from "express";
 import sqlite3 from "sqlite3";
-import fs from "fs";
-import sqlite3A from "sqlite3-async";
 
 const app = express();
 
 const port = 3000;
 
 const tablename = "test2";
+
 
 app.set("view engine", "pug");
 
@@ -60,7 +59,6 @@ app.get("/Site1", async function (req, res) {
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   await delay(1000);
 
-  //console.log("This is the text" + hiddenArrayText);
   res.render("issLocation", {
     title: "ISS Stalker",
     message: "ISS Stalker",
@@ -68,7 +66,6 @@ app.get("/Site1", async function (req, res) {
     lon: lon,
     hiddenText: hiddenArrayText,
   });
-  //store fetched data in database
 });
 
 app.get("/Site2", function (req, res) {
@@ -204,13 +201,11 @@ async function deleteOld() {
     if (err) {
       return console.error(err.message);
     }
-    //console.log("Connected to the in-memory SQlite database.");
   });
 
   console.log("Deleting old Data");
   var query = `DELETE FROM ${tablename} WHERE timestamp=date('now','-1 day'); `;
 
-  // delete a row based on id
   db.run(query, function (err) {
     if (err) {
       return console.error(err.message);
@@ -225,6 +220,8 @@ async function deleteOld() {
   });
 }
 
+
+//fur Fetching Requests, gibt 10 moegliche alle Stadtnamen zurueck
 app.get("/getCities", function (req, res) {
   const name = req.query.name;
   console.log("Getting possible Cities for:" + name);
@@ -254,6 +251,8 @@ app.get("/getCities", function (req, res) {
       res.json();
       throw err;
     }
+    
+  console.timeEnd("possible Cities: Fetching rows");
     rows.forEach((row) => {
       json += JSON.stringify(row) + ",";
     });
@@ -264,7 +263,6 @@ app.get("/getCities", function (req, res) {
     res.json(JSON.parse(json));
   });
 
-  console.timeEnd("possible Cities: Fetching rows");
   db.close((err) => {
     if (err) {
       return console.error(err.message);
@@ -272,6 +270,7 @@ app.get("/getCities", function (req, res) {
   });
 });
 
+//gibt eine Stadt mit exakt dem gleichen Namen zurueck
 app.get("/getSingleCity", function (req, res) {
   const name = req.query.name;
   var cityname = name;
@@ -307,12 +306,12 @@ app.get("/getSingleCity", function (req, res) {
       res.json("none");
     }
     
-  });
-  db.close((err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-  });
+    db.close((err) => {
+      if (err) {
+        return console.error(err.message);
+      }
+    });
+  }); 
 });
 
 /*

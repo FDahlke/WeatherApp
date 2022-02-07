@@ -1,14 +1,13 @@
 extends defaultSite
 
+block navbar
+  nav.navbar(role='navigation' aria-label='main navigation'  class='is-light')
+    a.navbar-item(href='/site1')
+      |ISS Stalker
+    a.navbar-item(href='/site2')
+      |RoutenWetter
+    a.navbar-item(href='/weather')
+      |Wetter-App
 block content
-  nav.navbar(role='navigation' aria-label='main navigation')
-    .navbar-brand
-      a.navbar-item(href='/site1')
-        |ISS Stalker
-      a.navbar-item(href='/site2')
-        |RoutenWetter
-      a.navbar-item(href='/weather')
-        |Wetter-App
-  br
   h1.title= message
   block content2

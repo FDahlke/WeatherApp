@@ -57,6 +57,8 @@ const weather = {
       document.getElementById("CitySelector").value;
   },
 
+  //fetches Koordinaten der Stadt
+  //Momentan nicht benutzt
   fetchLocation: function (City) {
     let url = `http://api.openweathermap.org/geo/1.0/direct?q=${City}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
 
@@ -81,6 +83,7 @@ const weather = {
       .catch(console.err);
   },
 
+  //fetches Stadtnamen basierend auf Coordinaten
   fetchCity: function () {
     url = `http://api.openweathermap.org/geo/1.0/reverse?lat=${weather.lat}&lon=${weather.lon}&limit=1&appid=${weather.apiKey}`;
 
@@ -108,6 +111,7 @@ const weather = {
       .catch(console.err);
   },
 
+  //ruft Auswahl auf, wenn es zuviele moegliche Staedte gibt
   tooManyLocations: function (locations) {
     document.getElementById("LocationBox").className = "message";
 
@@ -128,7 +132,7 @@ const weather = {
     document.getElementById("TooManyLocationsMessage").innerHTML +=
       "</select>    </div>";
   },
-  //Fetching response from the API
+  //Fetches Wetterdaten basieren auf Koordinaten
   fetchWeather: function () {
     let url = `https://api.openweathermap.org/data/2.5/onecall?lat=${weather.lat}&lon=${weather.lon}&appid=${weather.apiKey}&units=${weather.units}&lang=${weather.lang}`;
 
@@ -145,6 +149,7 @@ const weather = {
       .catch(console.err);
   },
 
+  //zeigt Aktuelles Wetter an
   showCurrent: () => {
     let resp = weather.data;
     document.getElementById("wetterAnzeige").innerHTML =
@@ -188,6 +193,7 @@ const weather = {
     });
   },
 
+  //zeigt vorhersagen des aktuellen Tages an
   showHourly: () => {
     let resp = weather.data;
 
@@ -230,6 +236,7 @@ const weather = {
     }
   },
 
+  //zeigt vorhersagen der aktuellen Woche an
   showDaily: () => {
     let resp = weather.data;
 
@@ -279,6 +286,7 @@ const weather = {
   },
 };
 
+//fetches 
 async function getCities() {
   var partialName = document.getElementById("City").value;
 
@@ -291,11 +299,9 @@ async function getCities() {
     const data = await resp.json();
 
     document.getElementById("Citylist").innerHTML = "";
-    //console.log()
 
     weather.citylist = data;
     for (let i = 0; i < data.Cities.length; i++) {
-      //console.log(data);
       document.getElementById(
         "Citylist"
       ).innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country}">`;
