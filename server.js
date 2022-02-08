@@ -8,11 +8,17 @@ const port = 3000;
 
 const tablename = "test2";
 
-
 app.set("view engine", "pug");
 
 // Serve Static Assets
 app.use(express.static("public"));
+
+const dbStatic = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+  if (err) {
+    return console.error(err.message);
+  }
+});
+var dbFree = true;
 
 app.get("/", function (req, res) {
   res.render("index", { title: "Main Site", message: "Hello there!" });
@@ -27,22 +33,27 @@ app.get("/Site1", async function (req, res) {
 
   var lat = data.lat;
   var lon = data.lon;
-
+  /*
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
     }
     //console.log("Connected to the in-memory SQlite database.");
   });
-
+*/
   const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp timestamp, lat float, lon float);`;
 
-  db.run(createTable);
+  while (!dbFree) {
+    console.log("dbFree:" + dbFree);
+  }
+
+  dbFree = false;
+  dbStatic.run(createTable);
 
   let sql = `SELECT * FROM ${tablename}`;
 
   var hiddenArrayText = "";
-  const n = db.all(sql, [], (err, rows) => {
+  const n = dbStatic.all(sql, [], (err, rows) => {
     if (err) {
       throw err;
     }
@@ -50,11 +61,13 @@ app.get("/Site1", async function (req, res) {
       hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row) + "\n");
     });
   });
+  dbFree = true;
+  /*
   db.close((err) => {
     if (err) {
       return console.error(err.message);
     }
-  });
+  });*/
   //fetch location of the ISS
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   await delay(1000);
@@ -117,82 +130,90 @@ app.get("/ISS-now", function (req, res) {
   });
 });
 setInterval(async function () {
-  //await getLocation();
+  try {
+    getLocation();
+  } catch (error) {}
 }, 60000);
 setInterval(async function () {
-  //await deleteOld();
+  try {
+    await deleteOld();
+  } catch (error) {}
 }, 360000);
 
 //saving ISS location to Database
 async function getLocation() {
-  const url = "http://api.open-notify.org/iss-now.json";
-  const resp = await fetch(url);
+  try {
+    const url = "http://api.open-notify.org/iss-now.json";
+    const resp = await fetch(url);
 
-  if (!resp.ok) throw new Error(resp.statusText);
-  const data = await resp.json();
+    if (!resp.ok) throw new Error(resp.statusText);
+    const data = await resp.json();
 
-  var lat = data.iss_position.latitude;
-  var lon = data.iss_position.longitude;
-  var date = new Date(data.timestamp * 1000);
-  var timestamp = date.getFullYear() + "-";
-  {
-    if (date.getMonth() + 1 < 10) {
-      timestamp += "0";
-    }
-    timestamp += date.getMonth() + 1 + "-";
-
-    if (date.getDate() + 1 < 10) {
-      timestamp += "0";
-    }
-    timestamp += date.getDate() + " ";
-
-    if (date.getHours() < 10) {
-      timestamp += "0";
-    }
-    timestamp += date.getHours() + ":";
-
-    if (date.getMinutes() < 10) {
-      timestamp += "0";
-    }
-    timestamp += date.getMinutes() + ":";
-
-    if (date.getSeconds() < 10) {
-      timestamp += "0";
-    }
-    timestamp += date.getSeconds();
-
-    //console.log(timestamp);
-  }
-
-  console.log(
-    "saving new value: {Timestamp: " + timestamp + ", lat: " + lat,
-    ", lon: " + lon
-  );
-
-  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-  });
-
-  db.run(
-    `INSERT INTO ${tablename}(timestamp, lat, lon) VALUES(?,?,?)`,
-    [timestamp, lat, lon],
-    function (err) {
-      if (err) {
-        return console.log(err.message);
+    var lat = data.iss_position.latitude;
+    var lon = data.iss_position.longitude;
+    var date = new Date(data.timestamp * 1000);
+    var timestamp = date.getFullYear() + "-";
+    {
+      if (date.getMonth() + 1 < 10) {
+        timestamp += "0";
       }
-      // get the last insert id
-      console.log(`A row has been inserted with rowid ${this.lastID}`);
-    }
-  );
+      timestamp += date.getMonth() + 1 + "-";
 
-  db.close((err) => {
-    if (err) {
-      return console.error(err.message);
+      if (date.getDate() + 1 < 10) {
+        timestamp += "0";
+      }
+      timestamp += date.getDate() + " ";
+
+      if (date.getHours() < 10) {
+        timestamp += "0";
+      }
+      timestamp += date.getHours() + ":";
+
+      if (date.getMinutes() < 10) {
+        timestamp += "0";
+      }
+      timestamp += date.getMinutes() + ":";
+
+      if (date.getSeconds() < 10) {
+        timestamp += "0";
+      }
+      timestamp += date.getSeconds();
+
+      //console.log(timestamp);
     }
-    console.log("Close the database connection.");
-  });
+
+    console.log(
+      "saving new value: {Timestamp: " + timestamp + ", lat: " + lat,
+      ", lon: " + lon
+    );
+
+    const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
+      if (err) {
+        return console.error(err.message);
+      }
+    });
+
+    db.run(
+      `INSERT INTO ${tablename}(timestamp, lat, lon) VALUES(?,?,?)`,
+      [timestamp, lat, lon],
+      function (err) {
+        if (err) {
+          return console.log(err.message);
+        }
+        // get the last insert id
+        console.log(`A row has been inserted with rowid ${this.lastID}`);
+      }
+    );
+
+    db.close((err) => {
+      if (err) {
+        return console.error(err.message);
+      }
+      console.log("Close the database connection.");
+    });
+  } catch (error) {
+    console.log("Connection Error while Fetching ISS Location")
+  }
 }
 
 //Deleting location data older than 24
@@ -204,7 +225,7 @@ async function deleteOld() {
   });
 
   console.log("Deleting old Data");
-  var query = `DELETE FROM ${tablename} WHERE timestamp=date('now','-1 day'); `;
+  var query = `DELETE FROM ${tablename} WHERE timestamp<date('now','-1 day'); `;
 
   db.run(query, function (err) {
     if (err) {
@@ -219,7 +240,6 @@ async function deleteOld() {
     }
   });
 }
-
 
 //fur Fetching Requests, gibt 10 moegliche alle Stadtnamen zurueck
 app.get("/getCities", function (req, res) {
@@ -237,22 +257,29 @@ app.get("/getCities", function (req, res) {
 
   console.time("possible Cities: Opening Database");
 
+  while (!dbFree) {
+    console.log("GetCities: dbFree:" + dbFree);
+  }
+
+  dbFree = false;
+
+  /*
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
     }
-  });
+  });*/
   console.timeEnd("possible Cities: Opening Database");
 
   var json = '{"Cities":[';
   console.time("possible Cities: Fetching rows");
-  const n = db.all(sql, [], (err, rows) => {
+  const n = dbStatic.all(sql, [], (err, rows) => {
     if (err) {
       res.json();
       throw err;
     }
-    
-  console.timeEnd("possible Cities: Fetching rows");
+
+    console.timeEnd("possible Cities: Fetching rows");
     rows.forEach((row) => {
       json += JSON.stringify(row) + ",";
     });
@@ -263,11 +290,13 @@ app.get("/getCities", function (req, res) {
     res.json(JSON.parse(json));
   });
 
+  dbFree = true;
+  /*
   db.close((err) => {
     if (err) {
       return console.error(err.message);
     }
-  });
+  });*/
 });
 
 //gibt eine Stadt mit exakt dem gleichen Namen zurueck
@@ -302,16 +331,16 @@ app.get("/getSingleCity", function (req, res) {
       alreadySet = true;
     });
     console.timeEnd("single City: fetching");
-    if(!alreadySet){
+    if (!alreadySet) {
       res.json("none");
     }
-    
+
     db.close((err) => {
       if (err) {
         return console.error(err.message);
       }
     });
-  }); 
+  });
 });
 
 /*
