@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import express, { response } from "express";
 import sqlite3 from "sqlite3";
+import Sequelize from "sequelize";
 
 const app = express();
 
@@ -212,7 +213,7 @@ async function getLocation() {
       console.log("Close the database connection.");
     });
   } catch (error) {
-    console.log("Connection Error while Fetching ISS Location")
+    console.log("Connection Error while Fetching ISS Location");
   }
 }
 
@@ -253,7 +254,7 @@ app.get("/getCities", function (req, res) {
     country = name.substring(name.indexOf(",") + 1, name.length);
   }
 
-  var sql = `SELECT * FROM Cities WHERE name LIKE '${cityname}%' AND country LIKE '${country}%' limit 10;`;
+  var sql = `SELECT * FROM Cities WHERE name LIKE '${cityname}%' AND country LIKE '${country}%' limit 20;`;
 
   console.time("possible Cities: Opening Database");
 
@@ -263,12 +264,6 @@ app.get("/getCities", function (req, res) {
 
   dbFree = false;
 
-  /*
-  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-  });*/
   console.timeEnd("possible Cities: Opening Database");
 
   var json = '{"Cities":[';
@@ -304,13 +299,30 @@ app.get("/getSingleCity", function (req, res) {
   const name = req.query.name;
   var cityname = name;
   var country = "";
+  var state = "";
   console.log("Getting single City " + name);
+
+  var ar = name.split(",");
+  switch (ar.length) {
+    case 1:
+      cityname = ar[0];
+      break;
+
+    case 2:
+      cityname = ar[0];
+      country = ar[1];
+      break;
+
+    case 3:
+      cityname = ar[0];
+      country = ar[1];
+      state = ar[2];
+      break;
+  }
   if (name.includes(",")) {
-    cityname = name.substring(0, name.indexOf(","));
-    country = name.substring(name.indexOf(",") + 1, name.length);
   }
 
-  var sql = `SELECT * FROM Cities WHERE name = '${cityname}' AND country LIKE '${country}%' limit 1;`;
+  var sql = `SELECT * FROM Cities WHERE name = '${cityname}' AND country LIKE '${country}%' AND state like '%${state}' limit 1;`;
 
   console.time("single City: fetching");
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
@@ -321,12 +333,16 @@ app.get("/getSingleCity", function (req, res) {
 
   var alreadySet = false;
 
+  
+  console.log(sql)
   var json = '{"Cities":[';
   const n = db.all(sql, [], (err, rows) => {
     if (err) {
       throw err;
     }
     rows.forEach((row) => {
+
+      const test123 = City.create({name: row.name,lat: row.lat, lon:row.lon,country:row.country,state:row.state })
       res.json(row);
       alreadySet = true;
     });
@@ -343,6 +359,59 @@ app.get("/getSingleCity", function (req, res) {
   });
 });
 
+const sequelize = new Sequelize("sqlite::memory:");
+
+try {
+  await sequelize.authenticate();
+  console.log("Connection has been established successfully.");
+} catch (error) {
+  console.error("Unable to connect to the database:", error);
+}
+
+
+const City = sequelize.define(
+  "City",
+  {
+    // Model attributes are defined here
+    name: {
+      type: Sequelize.STRING,
+      allowNull: false,
+    },
+    lat: {
+      type: Sequelize.FLOAT,
+    },
+    lon: {
+      type: Sequelize.FLOAT,
+    },
+    country: {
+      type: Sequelize.STRING,
+    },
+    state: {
+      type: Sequelize.STRING,
+    }
+  },
+  {
+    // Other model options go here
+  }
+);
+
+City.sync();
+
+
+app.get("/ORM-Test", async function (req, res) {
+
+  
+
+  var test123 = "";
+  await City.findAll({
+
+  }).then((cities) => {
+    console.log("All Cities:", JSON.stringify(cities, null, 4));
+    test123 = cities;
+  });
+
+  res.json(test123);
+});
 /*
 app.get("/Cities", async function (req, res) {
   //const fs = require("fs");

@@ -36,8 +36,9 @@ const weather = {
 
   FirstFunction: async function () {
     //weather.fetchLocation(document.getElementById("City").value);
+    
     var partialName = document.getElementById("City").value;
-
+    console.log("Fetching data for" + partialName)
     const url2 = `http://localhost:3000/getSingleCity?name=${partialName}`;
     const singleCity = await fetch(url2);
     const singleData = await singleCity.json();
@@ -304,7 +305,7 @@ async function getCities() {
     for (let i = 0; i < data.Cities.length; i++) {
       document.getElementById(
         "Citylist"
-      ).innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country}">`;
+      ).innerHTML += `<option value="${data.Cities[i].name},${data.Cities[i].country},${data.Cities[i].state}">`;
     }
   } else {
     document.getElementById("Citylist").innerHTML = "";
