@@ -222,3 +222,7 @@ app.get("/getCities", async function (req, res) {
     //JSON.stringify(cities, null, 4))
   });
 });
+
+app.get("/Weather", function (req, res) {
+  res.render("Weather", { title: "Weather", message: "Wetter" });
+});

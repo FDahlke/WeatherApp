@@ -1,11 +1,10 @@
 extends basicSite.pug
 
 block jscript
-  script(src='/js/scriptWeatherRoute.js')
 
-  link(rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css' integrity='sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==' crossorigin='')
-  script(src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js' integrity='sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==' crossorigin='')
-  script(src='https://cdn.jsdelivr.net/npm/chart.js')
+  link(rel='stylesheet' href='/css/leaflet.css' )
+  script(src='/js/leaflet.js')
+
 
   style.
     #map{height:45vh; width:100%;}
@@ -44,6 +43,12 @@ block content2
       var x = L.polyline([ar[ar.length-2],ar[ar.length-1]]).addTo(map);
     }
 
+    var greenIcon = L.icon({
+      iconUrl: 'iss-icon.png',
+      //https://openclipart.org/detail/196091/satellite-icon
+      iconSize:     [30, 30], // size of the icon
+      iconAnchor:   [15,15], // point of the icon which will correspond to marker's location
+    });
 
     function setMap() {
       const lat = document.getElementById("lat").textContent
@@ -56,7 +61,7 @@ block content2
       '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       worldCopyJump: true,
     }).addTo(map);
-    marker = L.marker([lat, lon]).addTo(map);
+    marker = L.marker([lat, lon], {icon: greenIcon}).addTo(map);
     polyline = L.polyline(ar).addTo(map);
     //console.log(document.getElementById("MapBox"))
     }
@@ -86,8 +91,24 @@ block content2
 
         //Differenz zwischen letztem und vorletztem punkt
         const diff = (ar[i-1][1] - ar[i][1]);
-        if(diff<0 && diff>-10){
+        var oldar = [...ar[i-1]];
+        oldar[1]= +oldar[1]+360
+        var newar = [...ar[i]];
+        newar[1]= +newar[1]+360
+
+        var oldar2 = [...ar[i-1]];
+        oldar2[1]= +oldar2[1]-360
+        var newar2 = [...ar[i]];
+        newar2[1]= +newar2[1]-360
+
+        if(diff<0 && diff>-50){
           var x = L.polyline([ar[i-1],ar[i]]).addTo(map);
+          var y = L.polyline([oldar,newar]).addTo(map);
+          var y = L.polyline([oldar2,newar2]).addTo(map);
+
+        } else {
+          var z = L.polyline([ar[i-1],newar]).addTo(map);
+          var z = L.polyline([oldar2,ar[i]]).addTo(map);
         }
       }
     }

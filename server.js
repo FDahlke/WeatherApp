@@ -2,11 +2,13 @@ import fetch from "node-fetch";
 import express, { response } from "express";
 import sqlite3 from "sqlite3";
 import Sequelize from "sequelize";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 
-const port = 3000;
-
+const port = process.env.PORT;
+const ip = process.env.IP;
 const tablename = "test2";
 
 app.set("view engine", "pug");
@@ -21,65 +23,57 @@ const dbStatic = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
 });
 var dbFree = true;
 
+app.listen(port, function () {
+  console.log(`Example app listening on port ${port}!`);
+});
+
 app.get("/", function (req, res) {
   res.render("index", { title: "Main Site", message: "Hello there!" });
 });
 
 app.get("/Site1", async function (req, res) {
-  const url = "http://localhost:3000/ISS-now";
-  const resp = await fetch(url);
+  const url = `http://${ip}:${port}/ISS-now`;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(resp.statusText);
+    const data = await resp.json();
+    var lat = data.lat;
+    var lon = data.lon;
 
-  if (!resp.ok) throw new Error(resp.statusText);
-  const data = await resp.json();
+    const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp timestamp, lat float, lon float);`;
 
-  var lat = data.lat;
-  var lon = data.lon;
-  /*
-  const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
-    if (err) {
-      return console.error(err.message);
+    while (!dbFree) {
+      console.log("dbFree:" + dbFree);
     }
-    //console.log("Connected to the in-memory SQlite database.");
-  });
-*/
-  const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp timestamp, lat float, lon float);`;
 
-  while (!dbFree) {
-    console.log("dbFree:" + dbFree);
-  }
+    dbFree = false;
+    dbStatic.run(createTable);
 
-  dbFree = false;
-  dbStatic.run(createTable);
+    let sql = `SELECT * FROM ${tablename}`;
 
-  let sql = `SELECT * FROM ${tablename}`;
-
-  var hiddenArrayText = "";
-  const n = dbStatic.all(sql, [], (err, rows) => {
-    if (err) {
-      throw err;
-    }
-    rows.forEach((row) => {
-      hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row) + "\n");
+    var hiddenArrayText = "";
+    const n = dbStatic.all(sql, [], (err, rows) => {
+      if (err) {
+        throw err;
+      }
+      rows.forEach((row) => {
+        hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row) + "\n");
+      });
     });
-  });
-  dbFree = true;
-  /*
-  db.close((err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-  });*/
-  //fetch location of the ISS
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  await delay(1000);
+    dbFree = true;
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    await delay(1000);
 
-  res.render("issLocation", {
-    title: "ISS Stalker",
-    message: "ISS Stalker",
-    lat: lat,
-    lon: lon,
-    hiddenText: hiddenArrayText,
-  });
+    res.render("issLocation", {
+      title: "ISS Stalker",
+      message: "ISS Stalker",
+      lat: lat,
+      lon: lon,
+      hiddenText: hiddenArrayText,
+    });
+  } catch (error) {
+    res.json("Error");
+  }
 });
 
 app.get("/Site2", function (req, res) {
@@ -91,10 +85,6 @@ app.get("/Site2", function (req, res) {
 
 app.get("/Weather", function (req, res) {
   res.render("Weather", { title: "Weather", message: "Wetter" });
-});
-
-app.listen(port, function () {
-  console.log(`Example app listening on port ${port}!`);
 });
 
 //Fetch Site for last location in Database
@@ -121,6 +111,7 @@ app.get("/ISS-now", function (req, res) {
       lat: lat,
       lon: lon,
     };
+
     res.json(issNow);
   });
 
@@ -133,20 +124,26 @@ app.get("/ISS-now", function (req, res) {
 setInterval(async function () {
   try {
     getLocation();
+    deleteOld();
   } catch (error) {}
-}, 60000);
+}, 150000);
 setInterval(async function () {
   try {
-    await deleteOld();
+    //await deleteOld();
   } catch (error) {}
 }, 360000);
+
+app.get("/getISS", function (req, res) {
+  getLocation();
+  res.json("");
+});
 
 //saving ISS location to Database
 async function getLocation() {
   try {
+    console.log("Getting ISS Location")
     const url = "http://api.open-notify.org/iss-now.json";
     const resp = await fetch(url);
-
     if (!resp.ok) throw new Error(resp.statusText);
     const data = await resp.json();
 
@@ -183,11 +180,6 @@ async function getLocation() {
       //console.log(timestamp);
     }
 
-    console.log(
-      "saving new value: {Timestamp: " + timestamp + ", lat: " + lat,
-      ", lon: " + lon
-    );
-
     const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
       if (err) {
         return console.error(err.message);
@@ -201,8 +193,6 @@ async function getLocation() {
         if (err) {
           return console.log(err.message);
         }
-        // get the last insert id
-        console.log(`A row has been inserted with rowid ${this.lastID}`);
       }
     );
 
@@ -226,7 +216,7 @@ async function deleteOld() {
   });
 
   console.log("Deleting old Data");
-  var query = `DELETE FROM ${tablename} WHERE timestamp<date('now','-1 day'); `;
+  var query = `DELETE FROM ${tablename} WHERE timestamp<datetime('now','-2 hour'); `;
 
   db.run(query, function (err) {
     if (err) {
@@ -333,16 +323,19 @@ app.get("/getSingleCity", function (req, res) {
 
   var alreadySet = false;
 
-  
-  console.log(sql)
   var json = '{"Cities":[';
   const n = db.all(sql, [], (err, rows) => {
     if (err) {
       throw err;
     }
     rows.forEach((row) => {
-
-      const test123 = City.create({name: row.name,lat: row.lat, lon:row.lon,country:row.country,state:row.state })
+      const test123 = City.create({
+        name: row.name,
+        lat: row.lat,
+        lon: row.lon,
+        country: row.country,
+        state: row.state,
+      });
       res.json(row);
       alreadySet = true;
     });
@@ -368,7 +361,6 @@ try {
   console.error("Unable to connect to the database:", error);
 }
 
-
 const City = sequelize.define(
   "City",
   {
@@ -388,7 +380,7 @@ const City = sequelize.define(
     },
     state: {
       type: Sequelize.STRING,
-    }
+    },
   },
   {
     // Other model options go here
@@ -397,16 +389,9 @@ const City = sequelize.define(
 
 City.sync();
 
-
 app.get("/ORM-Test", async function (req, res) {
-
-  
-
   var test123 = "";
-  await City.findAll({
-
-  }).then((cities) => {
-    console.log("All Cities:", JSON.stringify(cities, null, 4));
+  await City.findAll({}).then((cities) => {
     test123 = cities;
   });
 

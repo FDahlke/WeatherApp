@@ -1,0 +1,7 @@
+version : '3'
+services:
+  web:
+    container_name: WeatherApp
+    image: fdahlke/weatherapp 
+    ports:
+      - "3000:3000"

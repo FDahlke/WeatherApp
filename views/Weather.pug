@@ -3,8 +3,8 @@ extends basicSite.pug
 block jscript
   script(src='/js/script2.js')
 
-  link(rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css' integrity='sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==' crossorigin='')
-  script(src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js' integrity='sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==' crossorigin='')
+  link(rel='stylesheet' href='/css/leaflet.css')
+  script(src='/js/leaflet.js')
 
   style.
     #map{height:45vh; width:40vw;}
@@ -37,5 +37,5 @@ block content2
       .columns(class="is-mobile" id="wetterAnzeige")
 
     script.
-      weather.init();
+      init();
 
