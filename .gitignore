@@ -3,6 +3,7 @@
 node_modules/*
 weatherapp.tar
 .env
+.pem
 
 # Logs
 logs
@@ -96,3 +97,5 @@ out
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+cert.pem
+key.pem

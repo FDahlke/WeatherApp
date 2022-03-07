@@ -1,15 +1,17 @@
+var protocoll = "http";
 var ip = "localhost";
 var port = "3000";
 
 try {
   var fullURL = window.location.href;
+  protocoll = fullURL.substring(0, fullURL.indexOf("/") - 1);
   fullURL = fullURL.substring(fullURL.indexOf("/") + 2);
   var partUrl = fullURL.substring(0, fullURL.indexOf("/"));
   ip = partUrl.substring(0, partUrl.indexOf(":"));
   port = partUrl.substring(partUrl.indexOf(":") + 1);
-
 } catch (error) {
-  console.log(error)
+  console.log(error);
+  protocoll = "http";
   ip = "localhost";
   port = "3000";
 }
@@ -56,8 +58,8 @@ async function FirstFunction() {
 
   var partialName = document.getElementById("City").value;
   console.log("Fetching data for" + partialName);
-  const url2 = `http://${ip}:${port}/getSingleCity?name=${partialName}`;
-  console.log(url2)
+  const url2 = `${protocoll}://${ip}:${port}/getSingleCity?name=${partialName}`;
+  console.log(url2);
   const singleCity = await fetch(url2);
   const singleData = await singleCity.json();
   console.log(singleData);
@@ -79,7 +81,7 @@ function secondFunction() {
 //fetches Koordinaten der Stadt
 //Momentan nicht benutzt
 function fetchLocation(City) {
-  let url = `http://api.openweathermap.org/geo/1.0/direct?q=${City}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
+  let url = `https://api.openweathermap.org/geo/1.0/direct?q=${City}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
 
   fetch(url)
     .then((resp) => {
@@ -103,7 +105,7 @@ function fetchLocation(City) {
 
 //fetches Stadtnamen basierend auf Coordinaten
 function fetchCity() {
-  url = `http://api.openweathermap.org/geo/1.0/reverse?lat=${weather.lat}&lon=${weather.lon}&limit=1&appid=${weather.apiKey}`;
+  url = `https://api.openweathermap.org/geo/1.0/reverse?lat=${weather.lat}&lon=${weather.lon}&limit=1&appid=${weather.apiKey}`;
 
   console.log("Fetching City Name from: " + url);
   fetch(url)
@@ -175,7 +177,7 @@ function showCurrent() {
 
   //document.getElementById("columnCurrent").innerHTML += resp.name + "<br>";
 
-  let pngUrl = `http://openweathermap.org/img/wn/${resp.current.weather[0].icon}@4x.png`;
+  let pngUrl = `https://openweathermap.org/img/wn/${resp.current.weather[0].icon}@4x.png`;
   document.getElementById("columnCurrent").innerHTML +=
     '<img src="' + pngUrl + '"> <br>';
 
@@ -237,7 +239,7 @@ function showHourly() {
         "In " + i + " Stunden <br>";
     }
 
-    let pngUrl = `http://openweathermap.org/img/wn/${resp.hourly[i].weather[0].icon}@4x.png`;
+    let pngUrl = `https://openweathermap.org/img/wn/${resp.hourly[i].weather[0].icon}@4x.png`;
     document.getElementById("column" + i).innerHTML +=
       '<img src="' + pngUrl + '"> <br>';
 
@@ -286,7 +288,7 @@ function showDaily() {
     }
     //document.getElementById("columnCurrent").innerHTML += resp.name + "<br>";
 
-    let pngUrl = `http://openweathermap.org/img/wn/${resp.daily[i].weather[0].icon}@4x.png`;
+    let pngUrl = `https://openweathermap.org/img/wn/${resp.daily[i].weather[0].icon}@4x.png`;
     document.getElementById("column" + i).innerHTML +=
       '<img src="' + pngUrl + '"> <br>';
 
@@ -308,7 +310,7 @@ async function getCities() {
   var partialName = document.getElementById("City").value;
 
   if (partialName.length > 3) {
-    let url = `http://${ip}:${port}/getCities?name=${partialName}`;
+    let url = `${protocoll}://${ip}:${port}/getCities?name=${partialName}`;
 
     const resp = await fetch(url);
 

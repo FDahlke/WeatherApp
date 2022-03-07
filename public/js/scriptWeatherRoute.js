@@ -27,11 +27,6 @@ const weather = {
   },
   oldChart: "",
 };
-//new Date(parseInt("1642852800000"))
-//5 days in miliseconds: 432000000
-//+1h = 3600000
-//new Date(parseInt("1642863621618"))
-//new Date(parseInt((new Date().getTime()+432000000)))
 
 async function fetchWeather(cityWeather) {
   let url = `http://api.openweathermap.org/data/2.5/forecast?lat=${cityWeather.lat}&lon=${cityWeather.lon}&appid=${weather.apiKey}&units=${weather.units}&lang=${weather.lang}`;

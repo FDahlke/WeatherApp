@@ -4,12 +4,20 @@ import sqlite3 from "sqlite3";
 import Sequelize from "sequelize";
 import dotenv from "dotenv";
 dotenv.config();
+import fs from "fs"
+import https from "https";
 
 const app = express();
 
 const port = process.env.PORT;
 const ip = process.env.IP;
 const tablename = "test2";
+
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
 
 app.set("view engine", "pug");
 
@@ -23,16 +31,19 @@ const dbStatic = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
 });
 var dbFree = true;
 
+/*
 app.listen(port, function () {
   console.log(`Example app listening on port ${port}!`);
-});
+});*/
+
+https.createServer(options,app).listen(port);
 
 app.get("/", function (req, res) {
   res.render("index", { title: "Main Site", message: "Hello there!" });
 });
 
 app.get("/Site1", async function (req, res) {
-  const url = `http://${ip}:${port}/ISS-now`;
+  const url = `https://${ip}:${port}/ISS-now`;
   try {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(resp.statusText);
@@ -142,7 +153,7 @@ app.get("/getISS", function (req, res) {
 async function getLocation() {
   try {
     console.log("Getting ISS Location")
-    const url = "http://api.open-notify.org/iss-now.json";
+    const url = "https://api.open-notify.org/iss-now.json";
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(resp.statusText);
     const data = await resp.json();
