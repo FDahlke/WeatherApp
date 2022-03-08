@@ -18,6 +18,8 @@ const options = {
   cert: fs.readFileSync('cert.pem')
 };
 
+//erlaubt self signed certificates in fetch requests, nur für testzwecke
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
 app.set("view engine", "pug");
 
@@ -44,6 +46,7 @@ app.get("/", function (req, res) {
 
 app.get("/Site1", async function (req, res) {
   const url = `https://${ip}:${port}/ISS-now`;
+  console.log(url)
   try {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(resp.statusText);
@@ -83,7 +86,8 @@ app.get("/Site1", async function (req, res) {
       hiddenText: hiddenArrayText,
     });
   } catch (error) {
-    res.json("Error");
+    console.log(error)
+    res.json("Error:");
   }
 });
 
@@ -153,9 +157,10 @@ app.get("/getISS", function (req, res) {
 async function getLocation() {
   try {
     console.log("Getting ISS Location")
-    const url = "https://api.open-notify.org/iss-now.json";
+    const url = "http://api.open-notify.org/iss-now.json";
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(resp.statusText);
+    
     const data = await resp.json();
 
     var lat = data.iss_position.latitude;

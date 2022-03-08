@@ -7,10 +7,9 @@ block jscript
   script(src='/js/leaflet.js')
 
   style.
-    #map{height:45vh; width:40vw;}
+    #map{height:50vh; width:50vw;}
 
 block content2
-  br
   .box
     article.message.is-hidden(id="LocationBox")
       .message-header
@@ -20,19 +19,21 @@ block content2
         | Es gibt mehrere Städte mit diesem Namen. Bitte wählen sie eine aus <br>
         .select#Selector(onChange="weather.secondFunction()")
           select#CitySelector
-    input#City(class="input" list='Citylist' type='text' placeholder='Stadt' oninput='getCities()')
-    datalist#Citylist
-      
-    input.button(type='Submit' class="button is-primary is-centered" id="Submit" Name="Submit" value='Wie ist das Wetter heute?')
-      |
-    .box
-      .columns(class='is-centered is-mobile' id="columns")
-        .column
-          input.button(type='Submit' class="is-fullwidth" value='Aktuell' id="currentWeather")
-        .column
-          input.button(type='Submit' class="is-fullwidth" value="Heute" id="hourlyWeather")
-        .column
-          input.button(type='Submit' class="is-fullwidth" value="Diese Woche" id="dailyWeather")
+    .columns(class='is-centered is-mobile')
+      .column(class="is-four-fifths")
+        input#City(class="input" list='Citylist' type='text' placeholder='Stadt' oninput='getCities()')
+        datalist#Citylist
+      .column
+        input.button(type='Submit' class="button is-primary is-centered is-fullwidth" id="Submit" Name="Submit" value='Wie ist das Wetter heute?')
+    
+
+    .columns(class='is-centered is-mobile' id="columns")
+      .column
+        input.button(type='Submit' class="is-fullwidth" value='Aktuell' id="currentWeather")
+      .column
+        input.button(type='Submit' class="is-fullwidth" value="Heute" id="hourlyWeather")
+      .column
+        input.button(type='Submit' class="is-fullwidth" value="Diese Woche" id="dailyWeather")
     .box(id="wetterBox")
       .columns(class="is-mobile" id="wetterAnzeige")
 

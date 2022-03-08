@@ -28,7 +28,7 @@ block content2
     }
 
     async function updateMap(){
-      const url = "http://localhost:3000/ISS-now"
+      const url = "https://localhost:3000/ISS-now"
       const resp = await fetch(url);
 
       if (!resp.ok) throw new Error(resp.statusText);
