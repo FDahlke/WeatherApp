@@ -23,17 +23,21 @@ block content2
     var ar = [];
     const tablename ="test2"
 
-    function getAr(){
-
-    }
+    var fullURL = window.location.href;
+    protocoll = fullURL.substring(0, fullURL.indexOf("/") - 1);
+    fullURL = fullURL.substring(fullURL.indexOf("/") + 2);
+    var partUrl = fullURL.substring(0, fullURL.indexOf("/"));
+    ip = partUrl.substring(0, partUrl.indexOf(":"));
+    port = partUrl.substring(partUrl.indexOf(":") + 1);
 
     async function updateMap(){
-      const url = "https://localhost:3000/ISS-now"
-      const resp = await fetch(url);
 
+      const fetchUrl = ""
+      const url = `${protocoll}://${ip}:${port}/ISS-now`
+      const resp = await fetch(url);
       if (!resp.ok) throw new Error(resp.statusText);
       const data = await resp.json();
-
+      console.log(data);
       var lat =data.lat
       var lon =data.lon
       marker.setLatLng([lat,lon]);
@@ -70,7 +74,7 @@ block content2
     setInterval(function() {
       console.log("Updated Map")
       updateMap();
-    }, 30000);
+    }, 6000);
 
     function testy(){
       var hiddenText = document.getElementById("hiddenArray").innerHTML

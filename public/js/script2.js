@@ -2,6 +2,7 @@ var protocoll = "http";
 var ip = "localhost";
 var port = "3000";
 
+//getting correct IP-Adress
 try {
   var fullURL = window.location.href;
   protocoll = fullURL.substring(0, fullURL.indexOf("/") - 1);
@@ -31,6 +32,8 @@ const weather = {
 
   citylist: "",
 };
+
+
 function init() {
   //Adding Click Function to button
   var x = document
@@ -54,22 +57,17 @@ function init() {
 }
 
 async function FirstFunction() {
-  //weather.fetchLocation(document.getElementById("City").value);
 
   var partialName = document.getElementById("City").value;
-  console.log("Fetching data for" + partialName);
   const url2 = `${protocoll}://${ip}:${port}/getSingleCity?name=${partialName}`;
-  console.log(url2);
   const singleCity = await fetch(url2);
   const singleData = await singleCity.json();
-  console.log(singleData);
   weather.lat = singleData.lat;
   weather.lon = singleData.lon;
   fetchWeather();
 }
-function secondFunction() {
-  console.log("Click");
 
+function secondFunction() {
   var x = document.getElementById("CitySelector").value;
   if (x != "Stadt auswählen") {
     fetchLocation(x);
@@ -78,8 +76,7 @@ function secondFunction() {
     document.getElementById("CitySelector").value;
 }
 
-//fetches Koordinaten der Stadt
-//Momentan nicht benutzt
+//fetching Koordinaten der Stadt
 function fetchLocation(City) {
   let url = `https://api.openweathermap.org/geo/1.0/direct?q=${City}&limit=5&appid=${weather.apiKey}&lang=${weather.lang}`;
 
@@ -305,7 +302,7 @@ function showDaily() {
   }
 }
 
-//fetches
+//fetching CityData
 async function getCities() {
   var partialName = document.getElementById("City").value;
 

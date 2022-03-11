@@ -38,3 +38,6 @@ services:
 
 
 docker stack deploy --compose-file docker-compose.yml fdahlke/weatherapp
+
+
+10.61.16.6:3128

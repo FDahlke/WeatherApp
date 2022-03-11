@@ -4,8 +4,9 @@ import sqlite3 from "sqlite3";
 import Sequelize from "sequelize";
 import dotenv from "dotenv";
 dotenv.config();
-import fs from "fs"
+import fs from "fs";
 import https from "https";
+import ProxyAgent from "proxy-agent";
 
 const app = express();
 
@@ -14,12 +15,15 @@ const ip = process.env.IP;
 const tablename = "test2";
 
 const options = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
+  key: fs.readFileSync("key.pem"),
+  cert: fs.readFileSync("cert.pem"),
 };
 
 //erlaubt self signed certificates in fetch requests, nur für testzwecke
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+var proxyUri = process.env.http_proxy;
+const proxyAgent = new ProxyAgent(proxyUri);
 
 app.set("view engine", "pug");
 
@@ -33,12 +37,11 @@ const dbStatic = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
 });
 var dbFree = true;
 
-/*
-app.listen(port, function () {
-  console.log(`Example app listening on port ${port}!`);
-});*/
+app.listen(3001, function () {
+  console.log(`Example app listening on port 3001!`);
+});
 
-https.createServer(options,app).listen(port);
+https.createServer(options, app).listen(port);
 
 app.get("/", function (req, res) {
   res.render("index", { title: "Main Site", message: "Hello there!" });
@@ -46,7 +49,7 @@ app.get("/", function (req, res) {
 
 app.get("/Site1", async function (req, res) {
   const url = `https://${ip}:${port}/ISS-now`;
-  console.log(url)
+  console.log(url);
   try {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(resp.statusText);
@@ -54,29 +57,7 @@ app.get("/Site1", async function (req, res) {
     var lat = data.lat;
     var lon = data.lon;
 
-    const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp timestamp, lat float, lon float);`;
-
-    while (!dbFree) {
-      console.log("dbFree:" + dbFree);
-    }
-
-    dbFree = false;
-    dbStatic.run(createTable);
-
-    let sql = `SELECT * FROM ${tablename}`;
-
-    var hiddenArrayText = "";
-    const n = dbStatic.all(sql, [], (err, rows) => {
-      if (err) {
-        throw err;
-      }
-      rows.forEach((row) => {
-        hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row) + "\n");
-      });
-    });
-    dbFree = true;
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    await delay(1000);
+    var hiddenArrayText = getAllIssLocations();
 
     res.render("issLocation", {
       title: "ISS Stalker",
@@ -86,10 +67,37 @@ app.get("/Site1", async function (req, res) {
       hiddenText: hiddenArrayText,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.json("Error:");
   }
 });
+
+function getAllIssLocations() {
+  const createTable = `CREATE TABLE IF NOT EXISTS ${tablename}(timestamp timestamp, lat float, lon float);`;
+
+  while (!dbFree) {
+    console.log("dbFree:" + dbFree);
+  }
+
+  dbFree = false;
+  dbStatic.run(createTable);
+
+  let sql = `SELECT * FROM ${tablename}`;
+
+  var hiddenArrayText = "";
+  const n = dbStatic.all(sql, [], (err, rows) => {
+    if (err) {
+      throw err;
+    }
+    rows.forEach((row) => {
+      hiddenArrayText = hiddenArrayText.concat(JSON.stringify(row) + "\n");
+    });
+  });
+  dbFree = true;
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  await delay(100);
+  return hiddenArrayText;
+}
 
 app.get("/Site2", function (req, res) {
   res.render("WeatherRoute", {
@@ -104,6 +112,7 @@ app.get("/Weather", function (req, res) {
 
 //Fetch Site for last location in Database
 app.get("/ISS-now", function (req, res) {
+  getLocation();
   const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
     if (err) {
       return console.error(err.message);
@@ -136,66 +145,73 @@ app.get("/ISS-now", function (req, res) {
     }
   });
 });
+
+//Regular Update of the ISS-Location
 setInterval(async function () {
   try {
     getLocation();
     deleteOld();
   } catch (error) {}
 }, 150000);
-setInterval(async function () {
-  try {
-    //await deleteOld();
-  } catch (error) {}
-}, 360000);
 
 app.get("/getISS", function (req, res) {
   getLocation();
   res.json("");
 });
 
+function getCorrectTimestamp(date){
+  var timestamp = date.getFullYear() + "-";
+
+  if (date.getMonth() + 1 < 10) {
+    timestamp += "0";
+  }
+  timestamp += date.getMonth() + 1 + "-";
+
+  if (date.getDate() + 1 < 10) {
+    timestamp += "0";
+  }
+  timestamp += date.getDate() + " ";
+
+  if (date.getHours() < 10) {
+    timestamp += "0";
+  }
+  timestamp += date.getHours() + ":";
+
+  if (date.getMinutes() < 10) {
+    timestamp += "0";
+  }
+  timestamp += date.getMinutes() + ":";
+
+  if (date.getSeconds() < 10) {
+    timestamp += "0";
+  }
+  timestamp += date.getSeconds();
+
+  return timestamp;
+}
+
 //saving ISS location to Database
 async function getLocation() {
   try {
-    console.log("Getting ISS Location")
-    const url = "http://api.open-notify.org/iss-now.json";
-    const resp = await fetch(url);
+    console.log("Getting ISS Location");
+    var url = "http://api.open-notify.org/iss-now.json";
+    var resp = await fetch(url, {
+      agent: proxyAgent,
+      method: "GET",
+    });
+
     if (!resp.ok) throw new Error(resp.statusText);
-    
+
     const data = await resp.json();
 
     var lat = data.iss_position.latitude;
     var lon = data.iss_position.longitude;
     var date = new Date(data.timestamp * 1000);
-    var timestamp = date.getFullYear() + "-";
-    {
-      if (date.getMonth() + 1 < 10) {
-        timestamp += "0";
-      }
-      timestamp += date.getMonth() + 1 + "-";
+    
 
-      if (date.getDate() + 1 < 10) {
-        timestamp += "0";
-      }
-      timestamp += date.getDate() + " ";
+    var timestamp = getCorrectTimestamp(date);
 
-      if (date.getHours() < 10) {
-        timestamp += "0";
-      }
-      timestamp += date.getHours() + ":";
-
-      if (date.getMinutes() < 10) {
-        timestamp += "0";
-      }
-      timestamp += date.getMinutes() + ":";
-
-      if (date.getSeconds() < 10) {
-        timestamp += "0";
-      }
-      timestamp += date.getSeconds();
-
-      //console.log(timestamp);
-    }
-
+    console.log("accessing database");
     const db = new sqlite3.Database(`./db/${tablename}.db`, (err) => {
       if (err) {
         return console.error(err.message);
@@ -220,6 +236,7 @@ async function getLocation() {
     });
   } catch (error) {
     console.log("Connection Error while Fetching ISS Location");
+    console.log(error);
   }
 }
 
@@ -292,12 +309,6 @@ app.get("/getCities", function (req, res) {
   });
 
   dbFree = true;
-  /*
-  db.close((err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-  });*/
 });
 
 //gibt eine Stadt mit exakt dem gleichen Namen zurueck
@@ -324,8 +335,6 @@ app.get("/getSingleCity", function (req, res) {
       country = ar[1];
       state = ar[2];
       break;
-  }
-  if (name.includes(",")) {
   }
 
   var sql = `SELECT * FROM Cities WHERE name = '${cityname}' AND country LIKE '${country}%' AND state like '%${state}' limit 1;`;
@@ -367,7 +376,7 @@ app.get("/getSingleCity", function (req, res) {
     });
   });
 });
-
+/*
 const sequelize = new Sequelize("sqlite::memory:");
 
 try {
@@ -413,6 +422,7 @@ app.get("/ORM-Test", async function (req, res) {
 
   res.json(test123);
 });
+*/
 /*
 app.get("/Cities", async function (req, res) {
   //const fs = require("fs");
